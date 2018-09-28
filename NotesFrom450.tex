@@ -1,0 +1,74 @@
+\title{Notes from CS 450}
+\author{
+        Daniel Craig \\
+                Department of Computer Science\\
+        BYU Idaho - Class of 2019\\
+}
+\date{\today}
+
+\documentclass[12pt]{article}
+
+\begin{document}
+\maketitle
+
+\section{Notes from Chapter 1}
+I have not read Chapter 1 yet.
+
+\section{Notes from Chapter 2}
+\begin{verse}
+``Accuracy is defined as the sum of the number of true positives and true negatives divided by the total number of examples."
+\end{verse}
+
+\begin{equation}
+Accuracy = \frac{TP + TN}{TP + FP + TN + FN}
+\end{equation}
+
+\begin{verse}
+``Sensitivity (also known as the true positive rate) is the ratio of the number of correct positive examples to the number classified as positive"
+\end{verse}
+
+\begin{equation}
+Sensitivity = \frac{TP}{TP + FN}
+\end{equation}
+
+\begin{verse}
+``specificity is the same ratio for negative examples"
+\end{verse}
+
+\begin{equation}
+Specificity = \frac{TN}{TN + FP}
+\end{equation}
+
+\begin{verse}
+``Precision is the ratio of correct positive examples to the number of actual positive examples"
+\end{verse}
+
+\begin{equation}
+Precision = \frac{TP}{TP + FP}
+\end{equation}
+
+\begin{verse}
+Recall is the ratio of the number of correct positive examples out of those that were classified as positive, which is the same as sensitivity.
+\end{verse}
+
+\begin{equation}
+\frac{TP}{TP + FN}
+\end{equation}
+
+\begin{verse}
+Bayes rule is the most important equation in machine learning, and it is as follows:
+\end{verse}
+
+\begin{equation}
+P(C_i|X_j) = \frac{P(X_j|C_i)P(C_i)}{P(X_j1)}
+\end{equation}
+
+\begin{verse}
+``Bayes rule relates the posterior probability $$P(C_i|X_j)$$ with the prior 
+probability $$P(C_i)$$ and class conditional probability $$P(X_j|C_i)$$. The denominator (the term on the bottom of the fraction) acts to normalise everything, so that all the probabilities sum to 1."
+\end{verse}
+
+
+
+\end{document}
+  
