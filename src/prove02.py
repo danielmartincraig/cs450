@@ -91,9 +91,11 @@ target_names = iris.target_names
 # Step 2
 data_train, data_test, targets_train, targets_test = train_test_split(data, target, test_size=0.33)
 
+k = input("K?")
+
 # Step 3
 classifier = KNN()
-model = classifier.fit(2, data_train, targets_train)
+model = classifier.fit(k, data_train, targets_train)
 
 # Step 4
 targets_predicted = model.predict(data_test)
@@ -102,7 +104,7 @@ accuracy = accuracy_score(targets_test, targets_predicted)
 print("The custom KNN model predicted with an accuracy of", accuracy)
 
 # Comparison
-classifier = KNeighborsClassifier(n_neighbors=3)
+classifier = KNeighborsClassifier(n_neighbors=k)
 model = classifier.fit(data_train, targets_train)
 targets_predicted = model.predict(data_test)
 

@@ -1,0 +1,43 @@
+When your assignment is complete, please answer the questions in this text file and upload it to I-Learn.
+
+1. Please provide the URL of your public GitHub repository.
+https://github.com/danielmartincraig/cs450
+
+2. Briefly describe your overall approach to the task and highlight the most difficult part of this assignment.
+
+ My overall approach was to follow the pattern from last week, while adding
+ logic to grab the k nearest neighbors and then return the mode of the neighbor
+ list. The hardest part was finding a bug that cause the whole data set to be
+ used to train and predict, instead of just the training data.
+
+3. Briefly describe your process for handling numeric data on different scales (i.e., normalizing).
+ I converted all the measurements to their equivalent z-score, taking care to
+ not mix up the averages or the standard deviations from the 4 columns of
+ attributes.
+
+4. Describe your results for the Iris data set. (For example, what level of accuracy did you see for different values of K?
+ My model consistently performed with better than 87% accuracy on the iris data
+ set. I noticed degrading accuracy for values of k > ~18.
+
+5. How did your implementation compare to existing implementations?
+ The SK learn implementation was shorter, and so sophisticated I didn't even
+ understand it. Mine was hackish in comparison.
+
+6. Describe anything you did to go above and beyond the minimum standard requirements.
+
+ This time I went above and beyond only in small ways, and not in any big way
+ like the instructions asked for. For example, I wrote all the KNN logic myself,
+ without using imported functions to find ties or break them.
+
+7. Please select the category you feel best describes your assignment:
+A - Some attempt was made
+B - Developing, but significantly deficient
+C - Slightly deficient, but still mostly adequate
+D - Meets requirements
+E - Shows creativity and excels above and beyond requirements
+
+-D-
+
+8. Provide a brief justification (1-2 sentences) for selecting that category.
+ My assignment submission meets all requirements, and performs consistently
+ within ~7% of the accuracy achieved by SK Learn's KKN model.
