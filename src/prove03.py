@@ -12,9 +12,10 @@
 ###############################################################################
 
 import pandas as pd
-from pandas import DataFrame
+from pandas import DataFrame, Series
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
 
 class datasetFromCsv(object):
     """ This class represents a dataset; the data is read from a csv file """
@@ -23,7 +24,7 @@ class datasetFromCsv(object):
 
     @property
     def data(self):
-        return self.filedata[self.attributeNames[:-1]]
+        return pd.DataFrame({attributeName: self.filedata[attributeName].astype('category').cat.codes for attributeName in self.attributeNames[:-1]})
         
     @property
     def target_names(self):
@@ -31,11 +32,7 @@ class datasetFromCsv(object):
 
     @property
     def targets(self):
-        targetNameMap = {}
-        for i, name in enumerate(self.target_names):
-            targetNameMap[name] = i
-        lastColumn = self.filedata[self.attributeNames[-1]]
-        return [targetNameMap[target] for target in lastColumn]
+        return self.filedata[self.attributeNames[-1]].astype('category').cat.codes
 
 
 class uciCarEvaluation(datasetFromCsv):
@@ -63,7 +60,7 @@ class autismData(datasetFromCsv):
 
     @property
     def attributeNames(self):
-        return []
+        return ["A1_Score", "A2_Score", "A3_Score", "A4_Score", "A5_Score", "A6_Score", "A7_Score", "A8_Score", "A9_Score", "A10_Score", "age", "gender", "ethnicity", "jundice", "austim", "contry_of_res", "used_app_before", "result", "age_desc", "relation", "Class/ASD"]
 
 
 class automobileMPG(datasetFromCsv):
@@ -77,7 +74,18 @@ class automobileMPG(datasetFromCsv):
 
     @property
     def attributeNames(self):
-        return []
+        return ["mpg", "cylinders", "displacement", "horsepower", "weight", "acceleration", "model year", "origin", "car name"] 
+
+
+def categorizeItems(column):
+    """ This function updates columns with numeric category values """
+    categories = sorted(list(set(column)))
+
+    nameMap = {}
+    for i, name in enumerate(categories):
+        nameMap[name] = i
+
+    return [nameMap[item] for item in column]
 
 
 # Minimum Standard Requirements
@@ -88,7 +96,7 @@ class automobileMPG(datasetFromCsv):
 #     Basic experimentation on the provided datasets.
 
 def main():
-    # Part 1: UCI Car Evaluation Experiment
+    # # # Part 1: UCI Car Evaluation Experiment
     carEvaluationDataObject = uciCarEvaluation()
     data = carEvaluationDataObject.data
     targets = carEvaluationDataObject.targets
@@ -96,17 +104,52 @@ def main():
 
     training_data, testing_data, training_targets, testing_targets = train_test_split(data, targets, test_size=0.33)
 
-    
+    k = 3
+
+    classifier = KNeighborsClassifier(n_neighbors=k)
+    model = classifier.fit(training_data, training_targets)
+
+    predicted_classes = model.predict(testing_data)
+
+    accuracy = accuracy_score(testing_targets, predicted_classes)
+    print "The KNN model predicted cars classes with an accuracy of", accuracy
+
+
+    # # # Part 2: Experiment on Data Related to Autism
+    autismDataObject = autismData()
+    data = autismDataObject.data
+    targets = autismDataObject.targets
+    target_names = autismDataObject.target_names
+
+    training_data, testing_data, training_targets, testing_targets = train_test_split(data, targets, test_size=0.33)
 
     k = 3
 
     classifier = KNeighborsClassifier(n_neighbors=k)
-    classifier.fit(training_data, training_targets)
+    model = classifier.fit(training_data, training_targets)
 
-    # Part 2: Experiment on Data Related to Autism
+    predicted_classes = model.predict(testing_data)
 
-    # Part 3: Auto MPG Experiment
+    accuracy = accuracy_score(testing_targets, predicted_classes)
+    print "The KNN model predicted autism classes with an accuracy of", accuracy
 
+    # # # Part 3: Auto MPG Experiment
+    automobileMPGDataObject = automobileMPG()
+    data = automobileMPGDataObject.data
+    targets = automobileMPGDataObject.targets
+    target_names = automobileMPGDataObject.target_names
+
+    training_data, testing_data, training_targets, testing_targets = train_test_split(data, targets, test_size=0.33)
+
+    k = 3
+
+    classifier = KNeighborsClassifier(n_neighbors=k)
+    model = classifier.fit(training_data, training_targets)
+
+    predicted_classes = model.predict(testing_data)
+
+    accuracy = accuracy_score(testing_targets, predicted_classes)
+    print "The KNN model predicted car classes with an accuracy of", accuracy
 
 if __name__ == "__main__":
     main()
