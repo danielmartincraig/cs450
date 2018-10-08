@@ -1,0 +1,45 @@
+When your assignment is complete, please answer the questions in this text file and upload it to I-Learn.
+
+1. Please provide the URL of your public GitHub repository.
+ https://github.com/danielmartincraig/cs450
+
+2. What was the most difficult part of this assignment?
+ The most difficult thing was dealing with missing data, and learning to use
+ Pandas dataframes. This I did largely by reading the source, which helped me to
+ understand some of the subtleties of the behavior of a dataframe.
+
+3. Briefly describe your process for handling non-numeric data.
+ In my experiments, I used the .astype("category") function to correct the
+ datatype of columns that were non-numeric.
+
+4. Briefly describe your process for missing data.
+ I simply dropped the rows.
+
+5. Describe your results for the Car Evaluation dataset.
+ My resulting experiment predicted the class of the car almost suspisciously
+ well - perfect accuracy nearly every time. I could find no explanation for
+ this.
+
+6. Describe your results for the Pima Indian dataset.
+ We didn't use this dataset - we used the Autism data instead. My models
+ performed on this data with ~97% accuracy.
+
+7. Describe your results for the Automobile MPG dataset.
+ My MPG predictions were off, with an average mean square error of 919. I'm not
+ sure how correct it is to average errors, statistically speaking.
+
+8. Describe anything you did to go above and beyond the minimum standard requirements.
+ I read a lot of the Pandas source, and I wrote a creative and well-engineered
+ solution that reads easily.
+
+9. Please select the category you feel best describes your assignment:
+A - Some attempt was made
+B - Developing, but significantly deficient
+C - Slightly deficient, but still mostly adequate
+D - Meets requirements
+E - Shows creativity and excels above and beyond requirements
+
+-D-
+
+10. Provide a brief justification (1-2 sentences) for selecting that category.
+I met all requirements, and a little more.
