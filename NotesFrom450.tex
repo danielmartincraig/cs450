@@ -7,12 +7,17 @@
 \date{\today}
 
 \documentclass[12pt]{article}
+\usepackage{tikz}
+\usetikzlibrary{arrows, calc}
+
 
 \begin{document}
 \maketitle
 
 \section{Notes from Chapter 1}
+\begin{verse}
 I have not read Chapter 1 yet.
+\end{verse}
 
 \section{Notes from Chapter 2}
 \begin{verse}
@@ -68,7 +73,24 @@ P(C_i|X_j) = \frac{P(X_j|C_i)P(C_i)}{P(X_j1)}
 probability $$P(C_i)$$ and class conditional probability $$P(X_j|C_i)$$. The denominator (the term on the bottom of the fraction) acts to normalise everything, so that all the probabilities sum to 1."
 \end{verse}
 
+\section{Notes from Chapter 12}
+\begin{verse}
+The highest information gain is achieved by selecting for the lowest entropy.
+\end{verse}
 
+\begin{figure}
+\centering
+\begin{tikzpicture}
+	\draw[->] (0,0) -- (5,0) node[right] {$x$};
+	\draw[->] (0,0) -- (0,5) node[above] {$y$};
+	\draw[scale=5,domain=.01:1,smooth,variable=\x,gray] plot ({\x},{-\x*log2(\x)-((1-\x)*log2(1-\x))});
+	
+	\path
+	coordinate (top) at (.5,1)
+	coordinate (bottom) at (.5,0);
+\end{tikzpicture}
+\caption{The Binary Entropy Function} \label{fig:M1}
+\end{figure}
 
 \end{document}
   
