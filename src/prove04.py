@@ -15,7 +15,11 @@ class decisionTreeClassifier(object):
     def fit(self, training_data, training_targets):
         self.training_data = training_data
         self.training_targets = training_targets
-        
+
+def calculateEntropy(p):
+    """ This function models the function Entropy(p) = -\sum_i{p_i\log_2{p_i}} """
+    pass
+
 # Make sure you are familiar with the instructions for the complete assignment.
 # 
 # Create a class for your decision tree classifier.
