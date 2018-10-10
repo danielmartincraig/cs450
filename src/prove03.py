@@ -22,13 +22,13 @@ from scipy.stats import zscore
 class datasetFromCsv(object):
     """ This class represents a dataset; the data is read from a csv file """
     def __init__(self, sep):
-        self.filedata = pd.read_csv(self.filename, header = None, names = self.attributeNames, sep=sep)
+        self.filedata = pd.read_csv(self.filename, header = None, names = self.attributeNames, skipinitialspace=True, sep=sep)
 
 
-class uciCarEvaluation(datasetFromCsv):
+class UciCarEvaluation(datasetFromCsv):
     """ This class represents the UCI data """
     def __init__(self):
-        super(uciCarEvaluation, self).__init__(sep=', ')
+        super(UciCarEvaluation, self).__init__(sep=',')
 
     @property
     def data(self):
@@ -64,10 +64,10 @@ class uciCarEvaluation(datasetFromCsv):
         return self.filedata[self.attributeNames[-1]].astype('category').cat.codes
 
 
-class autismData(datasetFromCsv):
+class AutismData(datasetFromCsv):
     """ This class represents the data related to Autism """
     def __init__(self):
-        super(autismData, self).__init__(sep=',')
+        super(AutismData, self).__init__(sep=',')
         self.filedata = self.filedata.replace('?', np.nan)
         self.filedata = self.filedata.dropna(axis="rows")
 
@@ -133,10 +133,10 @@ class autismData(datasetFromCsv):
         return self.filedata[self.attributeNames[-1]].astype('category').cat.codes
 
 
-class automobileMPG(datasetFromCsv):
+class AutomobileMPG(datasetFromCsv):
     """ This class represents the MPG data """
     def __init__(self):
-        super(automobileMPG, self).__init__(sep='\s+')
+        super(AutomobileMPG, self).__init__(sep='\s+')
         self.filedata = self.filedata.replace('?', np.nan)
         self.filedata = self.filedata.dropna(axis="rows")
         # pass
@@ -181,7 +181,7 @@ class automobileMPG(datasetFromCsv):
 
 def uciCarEvaluationExperiment():
     """ Part 1: UCI Car Evaluation Experiment """
-    carEvaluationDataObject = uciCarEvaluation()
+    carEvaluationDataObject = UciCarEvaluation()
     data = carEvaluationDataObject.data
     targets = carEvaluationDataObject.targets
     target_names = carEvaluationDataObject.target_names
@@ -214,7 +214,7 @@ def uciCarEvaluationExperiment():
 
 def autismDataExperiment():
     """ Part 2: Experiment on Data Related to Autism """
-    autismDataObject = autismData()
+    autismDataObject = AutismData()
     data = autismDataObject.data
     targets = autismDataObject.targets
     target_names = autismDataObject.target_names
@@ -246,7 +246,7 @@ def autismDataExperiment():
 
 def automobileMPGExperiment():
     """ Part 3: Automobile MPG Experiment """
-    automobileMPGDataObject = automobileMPG()
+    automobileMPGDataObject = AutomobileMPG()
     data = automobileMPGDataObject.data
     targets = automobileMPGDataObject.targets
     target_values = automobileMPGDataObject.target_values
