@@ -22,7 +22,7 @@ from scipy.stats import zscore
 class datasetFromCsv(object):
     """ This class represents a dataset; the data is read from a csv file """
     def __init__(self, sep):
-        self.filedata = pd.read_csv(self.filename, header = None, names = self.attributeNames, skipinitialspace=True, sep=sep)
+        self.filedata = pd.read_csv(self.filename, header = None, names = self.attribute_names, skipinitialspace=True, sep=sep)
 
 
 class UciCarEvaluation(datasetFromCsv):
@@ -46,7 +46,7 @@ class UciCarEvaluation(datasetFromCsv):
         return "/home/daniel/Repos/cs450/resources/uciCarEvaluation/archive.ics.uci.edu/ml/machine-learning-databases/car/car.data"
 
     @property
-    def attributeNames(self):
+    def attribute_names(self):
         return ["buying", 
                 "maint", 
                 "doors", 
@@ -57,11 +57,11 @@ class UciCarEvaluation(datasetFromCsv):
 
     @property
     def target_names(self):
-        return sorted(list(set(self.filedata[self.attributeNames[-1]])))
+        return sorted(list(set(self.filedata[self.attribute_names[-1]])))
 
     @property
     def targets(self):
-        return self.filedata[self.attributeNames[-1]].astype('category').cat.codes
+        return self.filedata[self.attribute_names[-1]].astype('category').cat.codes
 
 
 class AutismData(datasetFromCsv):
@@ -101,7 +101,7 @@ class AutismData(datasetFromCsv):
         return "/home/daniel/Repos/cs450/resources/autismData/archive.ics.uci.edu/ml/machine-learning-databases/00426/Autism-Adult-Data.arff"
 
     @property
-    def attributeNames(self):
+    def attribute_names(self):
         return ["A1_Score",
                 "A2_Score",
                 "A3_Score", 
@@ -126,11 +126,11 @@ class AutismData(datasetFromCsv):
 
     @property
     def target_names(self):
-        return sorted(list(set(self.filedata[self.attributeNames[-1]])))
+        return sorted(list(set(self.filedata[self.attribute_names[-1]])))
 
     @property
     def targets(self):
-        return self.filedata[self.attributeNames[-1]].astype('category').cat.codes
+        return self.filedata[self.attribute_names[-1]].astype('category').cat.codes
 
 
 class AutomobileMPG(datasetFromCsv):
@@ -159,7 +159,7 @@ class AutomobileMPG(datasetFromCsv):
         return "/home/daniel/Repos/cs450/resources/automobileMPG/archive.ics.uci.edu/ml/machine-learning-databases/auto-mpg/auto-mpg.data"
 
     @property
-    def attributeNames(self):
+    def attribute_names(self):
         return ["mpg", 
                 "cylinders", 
                 "displacement", 

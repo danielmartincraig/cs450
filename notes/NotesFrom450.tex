@@ -100,5 +100,13 @@ Entropy is defined as the following:
 Entropy(p) = -\sum_i{p_i\log_2{p_i}}
 \end{equation}
 
+\begin{verse}
+Information gain is defined as "the entropy of the whole set minus the entropy when a particular feature is chosen."
+\end{verse}
+
+\begin{equation}
+Gain(S,F)=Entropy(S) -\sum_{f\in values(F)}{\frac{\mid S_f \mid}{\mid S \mid}Entropy(S_f)}
+\end{equation}
+
 \end{document}
   
