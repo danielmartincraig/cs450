@@ -2,13 +2,12 @@
 #                              ID3 Decision Tree
 #                                Daniel Craig
 #
-#                            Milestone 1 - 10/8/18
-#
 ###############################################################################
 
 from prove03 import UciCarEvaluation
 from operator import itemgetter
 from numpy import log2
+from pandas import DataFrame, concat
 
 class decisionTreeClassifier(object):
     def __init__(self):
@@ -28,7 +27,7 @@ class decisionTreeClassifier(object):
 
     def recursiveTreeBuilder(self, tree, data, labels, feature_names):
         # The algorithm, from the book
-
+    
         if list(labels).count(labels[0]) == len(labels):
             # If all examples have the same label, return a leaf with that label.
         
@@ -58,7 +57,7 @@ class decisionTreeClassifier(object):
                 self.recursiveTreeBuilder(tree, data[feature_names], labels, feature_names)
                 pass
 
-
+        pass
         return tree
 
 class decisionTreeModel(object):
@@ -77,10 +76,23 @@ def calculate_information_gain(S, F):
     # Gain(S,F)=Entropy(S) - \sum_{f\in values(F)}{\frac{\mid S_f \mid}{\mid S \mid}Entropy(S_f)}
 
     # Calculate the entropy of S
-    # Get the subset of labels that display feature f from set of features F
-    # Do the summation, and subtract the result from the entropy of S
-    # Return the information gain
+    # entropy_of_s = calculate_entropy(S.labels)
+    
+    # Create a list of the values of S_f
+    unique_values_in_F = S[F].unique()
+    values_of_S_F = [S.query(F+' == @f').labels for f in unique_values_in_F]
 
+    # Create a list of the weights - len(S_f) / len(S)
+
+    # Create a list of the entropies
+
+    # Create a generator that returns the two as tuples
+
+    # Perform the dot product
+
+    # Subtract from the entropy of S
+
+    # Return the information gain
     return information_gain
 
 def calculate_entropy(labels):
@@ -131,14 +143,24 @@ def calculate_entropy(labels):
 def main():
     classifier = decisionTreeClassifier()
 
-    uciCarEvaluationDataObject = UciCarEvaluation()
+    data = DataFrame({
+        "deadline": ["urgent","urgent","near","none","none","none","near","near","near","urgent"],
+        "party": ["yes","no","yes","yes","no","yes","no","no","yes","no"],
+        "lazy": ["yes","yes","yes","no","yes","no","no","yes","yes","no"]
+    })
 
-    data = uciCarEvaluationDataObject.data
-    classes = uciCarEvaluationDataObject.targets
-    class_names = uciCarEvaluationDataObject.target_names
-    feature_names = uciCarEvaluationDataObject.attribute_names[:-1]
+    labels = DataFrame({
+        "activity": ["party","study","party","party","pub","party","study","tv","party","study"]
+    })
 
-    model = classifier.fit(data, classes, feature_names)
+    feature_names = ["deadline", "party", "lazy"]
+
+    wholeTable = concat([data, labels], axis=1)
+    wholeTable = wholeTable.rename(columns={'activity': 'labels'})
+    print calculate_information_gain(wholeTable, "deadline")
+
+    pass
+    # model = classifier.fit(data, labels, feature_names)
 
 
 if __name__ == "__main__":
