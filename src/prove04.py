@@ -1,13 +1,13 @@
 ###############################################################################
 #                              ID3 Decision Tree
-#                                Daniel Craig
 #
+#                                Daniel Craig
 ###############################################################################
-
 from prove03 import UciCarEvaluation
 from operator import itemgetter
 from numpy import log2
 from pandas import DataFrame, concat
+from itertools import izip
 
 class decisionTreeClassifier(object):
     def __init__(self):
@@ -71,26 +71,32 @@ class decisionTreeModel(object):
 def calculate_information_gain(S, F):
     """ This function calculates the information gain of a particular feature """
 
-    information_gain = 0
-
     # Gain(S,F)=Entropy(S) - \sum_{f\in values(F)}{\frac{\mid S_f \mid}{\mid S \mid}Entropy(S_f)}
 
+    # Initialize the information gain variable
+    information_gain = 0
+
     # Calculate the entropy of S
-    # entropy_of_s = calculate_entropy(S.labels)
+    entropy_of_s = calculate_entropy(S.labels)
     
-    # Create a list of the values of S_f
+    # Create a list of the values of S_f 
+    # Consider it to look like the following, although they are actually pandas vectors 
+    # [['party', 'study', 'study'], ['party', 'study', 'tv', 'party'], ['party', 'pub', 'party']]
     unique_values_in_F = S[F].unique()
-    values_of_S_F = [S.query(F+' == @f').labels for f in unique_values_in_F]
+    values_of_S_f = [S.query(F+' == @f').labels for f in unique_values_in_F]
 
     # Create a list of the weights - len(S_f) / len(S)
+    list_of_weights = [len(values_set) / float(len(S)) for values_set in values_of_S_f]
 
     # Create a list of the entropies
+    list_of_entropies = [calculate_entropy(values_set) for values_set in values_of_S_f]
 
-    # Create a generator that returns the two as tuples
-
-    # Perform the dot product
+    # Find the weighted sum
+    weighted_pairs = izip(list_of_weights, list_of_entropies)
+    weighted_sum_of_f_in_F = sum([weight * entropy for weight, entropy in weighted_pairs])
 
     # Subtract from the entropy of S
+    information_gain = entropy_of_s - weighted_sum_of_f_in_F
 
     # Return the information gain
     return information_gain
@@ -101,10 +107,10 @@ def calculate_entropy(labels):
     # Entropy(p) = -\sum_i{p_i\log_2{p_i}}
 
     # Get a list of the unique labels that are in the list
-    unique_labels = list(set(labels))
+    unique_labels = labels.unique()
 
     # Declare a lambda that calculates the probability of a label occurring
-    calculate_label_probability = lambda (label): labels.count(label) / float(len(labels))
+    calculate_label_probability = lambda (label): list(labels).count(label) / float(len(labels))
  
     # Declare a generator that provides the probability of each label in the list occuring
     p = (calculate_label_probability(label) for label in unique_labels)
