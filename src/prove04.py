@@ -104,12 +104,33 @@ class decisionTreeClassifier(object):
 
         return dTree
 
+
 class decisionTreeModel(object):
     def __init__(self, dTree):
         self.dTree = dTree
 
-    def predict(testing_data):
+    def predict(self, testing_data):
         pass
+
+    def _draw(self, graph, parent_name, child_name):
+        edge = pydot.Edge(parent_name, child_name)
+        graph.add_edge(edge)
+
+    def _visit(self, graph, node, parent=None):
+        for k, v in node.iteritems():
+            if isinstance(v, dict):
+                if parent:
+                    self._draw(graph, parent, k)
+                self._visit(graph, v, k)
+            else:
+                self._draw(graph, parent, k)
+                self._draw(graph, k, k+'_'+v)
+
+    def drawTree(self):
+        """ Draw the tree - this method draws heavily from https://stackoverflow.com/questions/13688410/dictionary-object-to-decision-tree-in-pydot"""
+        graph = pydot.Dot(graph_type='graph')
+        self._visit(graph, self.dTree)
+        graph.write_png('myGraph.png')
 
 
 def calculate_information_gain(S, F):
@@ -212,6 +233,7 @@ def main():
     label_names = uciCarEvaluationDataObject.target_names
 
     model = classifier.fit(data, labels)
+    model.drawTree()
     # model.predict()
 
 if __name__ == "__main__":
