@@ -3,44 +3,90 @@
 #
 #                                Daniel Craig
 ###############################################################################
-from prove03 import UciCarEvaluation
 from operator import itemgetter
 from numpy import log2
-from pandas import DataFrame, concat
+from pandas import DataFrame, concat, read_csv
 from itertools import izip
 from copy import deepcopy
+import pydot
+
+class datasetFromCsv(object):
+    """ This class represents a dataset; the data is read from a csv file """
+    def __init__(self, sep):
+        self.filedata = read_csv(self.filename, header = None, names = self.attribute_names, skipinitialspace=True, sep=sep)
+
+class UciCarEvaluation(datasetFromCsv):
+    """ This class represents the UCI data """
+    def __init__(self):
+        super(UciCarEvaluation, self).__init__(sep=',')
+
+    @property
+    def data(self):
+        return DataFrame({
+            "buying": self.filedata["buying"].astype('category'),
+            "maint": self.filedata["maint"].astype('category'),
+            "doors": self.filedata["doors"].astype('category'),
+            "persons": self.filedata["persons"].astype('category'),
+            "lug_boot": self.filedata["lug_boot"].astype('category'),
+            "safety": self.filedata["safety"].astype('category')
+        })
+
+    @property
+    def filename(self):
+        return "/home/daniel/Repos/cs450/resources/uciCarEvaluation/archive.ics.uci.edu/ml/machine-learning-databases/car/car.data"
+
+    @property
+    def attribute_names(self):
+        return ["buying", 
+                "maint", 
+                "doors", 
+                "persons", 
+                "lug_boot", 
+                "safety", 
+                "class"]
+
+    @property
+    def target_names(self):
+        return sorted(list(set(self.filedata[self.attribute_names[-1]])))
+
+    @property
+    def targets(self):
+        return DataFrame({'labels': self.filedata[self.attribute_names[-1]].astype('category')})
+
 
 class decisionTreeClassifier(object):
     def __init__(self):
         pass
 
-    def fit(self, training_data, training_labels, feature_names):
+    def fit(self, training_data, training_labels):
         # Store the data
         self.training_data = training_data
         self.training_labels = training_labels
-        self.feature_names = feature_names
 
         # Combine the data
         S = concat([self.training_data, self.training_labels], axis=1)
         S = S.rename(columns={'activity': 'labels'})
 
         # Build the tree
-        dTree = self.recursiveTreeBuilder(S, {})
+        dTree = self.recursiveTreeBuilder(S)
 
         # Return the model
         return decisionTreeModel(dTree)
 
-    def recursiveTreeBuilder(self, S, dTree):
+    def recursiveTreeBuilder(self, S):
         # The algorithm, from the book
-        
+        dTree = {}
+
         # If all examples have the same label:
         if len(S.labels.unique()) == 1:
-            return S.labels.unique()[0]
             # return a leaf with that label
+            return S.labels.unique()[0]
+
         # Else if there are no features left to test:
         if len(S) == 1:
-            return 'super-party'
             # return a leaf with the most common label
+            return 'super-duper-dad!'
+        
         # Else
         else:
             # choose the feature F^ that maximises the information gain of S to be the next node using Equation 12.2
@@ -52,12 +98,9 @@ class decisionTreeClassifier(object):
             unique_values_in_F = S[F].unique()
     
             # # for each branch:
-            # for f in unique_values_in_F:
             #     # calculate S_f by removing F^ from the set of features            
             #     # recursively call the algorithm with S_f, to compute the gain relative to the current set of examples
-            dTree[F] = {f: self.recursiveTreeBuilder(S.query(F+' == @f').drop(F, axis=1), {}) for f in unique_values_in_F}
-
-
+            dTree[F] = {f: self.recursiveTreeBuilder(S.query(F+' == @f').drop(F, axis=1)) for f in unique_values_in_F}
 
         return dTree
 
@@ -65,7 +108,7 @@ class decisionTreeModel(object):
     def __init__(self, dTree):
         self.dTree = dTree
 
-    def predict():
+    def predict(testing_data):
         pass
 
 
@@ -163,20 +206,13 @@ def calculate_entropy(labels):
 def main():
     classifier = decisionTreeClassifier()
 
-    data = DataFrame({
-        "deadline": ["urgent","urgent","near","none","none","none","near","near","near","urgent"],
-        "party": ["yes","no","yes","yes","no","yes","no","no","yes","no"],
-        "lazy": ["yes","yes","yes","no","yes","no","no","yes","yes","no"]
-    })
+    uciCarEvaluationDataObject = UciCarEvaluation()
+    data = uciCarEvaluationDataObject.data
+    labels = uciCarEvaluationDataObject.targets
+    label_names = uciCarEvaluationDataObject.target_names
 
-    labels = DataFrame({
-        "activity": ["party","study","party","party","pub","party","study","tv","party","study"]
-    })
-
-    feature_names = ["deadline", "party", "lazy"]
-
-    model = classifier.fit(data, labels, feature_names)
-
+    model = classifier.fit(data, labels)
+    # model.predict()
 
 if __name__ == "__main__":
     main()
