@@ -8,6 +8,7 @@ from operator import itemgetter
 from numpy import log2
 from pandas import DataFrame, concat
 from itertools import izip
+from copy import deepcopy
 
 class decisionTreeClassifier(object):
     def __init__(self):
@@ -52,13 +53,9 @@ class decisionTreeClassifier(object):
     
             # # for each branch:
             # for f in unique_values_in_F:
-            #     # calculate S_f by removing F^ from the set of features
-            #     S_f = S.query(F+' == @f').drop(F, axis=1)
-            
+            #     # calculate S_f by removing F^ from the set of features            
             #     # recursively call the algorithm with S_f, to compute the gain relative to the current set of examples
-            #     dTree[F] = {f: self.recursiveTreeBuilder(S_f, dTree)}
-        
-            dTree[F] = {f: self.recursiveTreeBuilder(S.query(F+' == @f').drop(F, axis=1), dTree) for f in unique_values_in_F}
+            dTree[F] = {f: self.recursiveTreeBuilder(S.query(F+' == @f').drop(F, axis=1), {}) for f in unique_values_in_F}
 
 
 
