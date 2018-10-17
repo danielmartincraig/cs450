@@ -11,7 +11,7 @@ from itertools import izip
 
 class decisionTreeClassifier(object):
     def __init__(self):
-        self.dTree = {}        
+        pass
 
     def fit(self, training_data, training_labels, feature_names):
         # Store the data
@@ -19,46 +19,50 @@ class decisionTreeClassifier(object):
         self.training_labels = training_labels
         self.feature_names = feature_names
 
+        # Combine the data
+        S = concat([self.training_data, self.training_labels], axis=1)
+        S = S.rename(columns={'activity': 'labels'})
+
         # Build the tree
-        self.dTree = self.recursiveTreeBuilder(self.dTree, self.training_data, self.training_labels, self.feature_names)
+        dTree = self.recursiveTreeBuilder(S, {})
 
         # Return the model
-        return decisionTreeModel(self.dTree)
+        return decisionTreeModel(dTree)
 
-    def recursiveTreeBuilder(self, tree, data, labels, feature_names):
+    def recursiveTreeBuilder(self, S, dTree):
         # The algorithm, from the book
-    
-        if list(labels).count(labels[0]) == len(labels):
-            # If all examples have the same label, return a leaf with that label.
         
-            return [labels[0]]
-        
-        elif len(feature_names) == 0:
-            # If there are no features left to test, return a leaf with the most common label.
-            
-            # TODO: decide how to determine the most common label
-            # return [most_common_label]
-            pass
-
+        # If all examples have the same label:
+        if len(S.labels.unique()) == 1:
+            return S.labels.unique()[0]
+            # return a leaf with that label
+        # Else if there are no features left to test:
+        if len(S) == 1:
+            return 'super-party'
+            # return a leaf with the most common label
+        # Else
         else:
             # choose the feature F^ that maximises the information gain of S to be the next node using Equation 12.2
-            gains_list = [(feature_name, calculate_information_gain(data, feature_name)) for feature_name in feature_names]
-            max_feature = max(gains_list, key=itemgetter(0))[0]
+            feature_names = list(S)[:-1]
+            gains_list = [(feature_name, calculate_information_gain(S, feature_name)) for feature_name in feature_names]
+            F = max(gains_list, key=itemgetter(1))[0]
             
-            # add a branch from the node for each possible value f in F^.
-            values_of_max_feature = data[max_feature].unique()
-            tree[max_feature] = values_of_max_feature
+            # add a branch from the node for each possible value f in F^
+            unique_values_in_F = S[F].unique()
+    
+            # # for each branch:
+            # for f in unique_values_in_F:
+            #     # calculate S_f by removing F^ from the set of features
+            #     S_f = S.query(F+' == @f').drop(F, axis=1)
+            
+            #     # recursively call the algorithm with S_f, to compute the gain relative to the current set of examples
+            #     dTree[F] = {f: self.recursiveTreeBuilder(S_f, dTree)}
+        
+            dTree[F] = {f: self.recursiveTreeBuilder(S.query(F+' == @f').drop(F, axis=1), dTree) for f in unique_values_in_F}
 
-            # for each branch:
-            for branch in tree[max_feature]:
-                # calculate S_f by removing F^ from the set of features
-                feature_names.remove(max_feature)
-                # recursively call the algorithm with S_f, to compute the gain relative to the current set of examples
-                self.recursiveTreeBuilder(tree, data[feature_names], labels, feature_names)
-                pass
 
-        pass
-        return tree
+
+        return dTree
 
 class decisionTreeModel(object):
     def __init__(self, dTree):
@@ -125,7 +129,7 @@ def calculate_entropy(labels):
     # Return the entropy
     return entropy
 
-# MILESTONE ASSIGNMENT REQUIREMENTS
+# ASSIGNMENT REQUIREMENTS
 # Make sure you are familiar with the instructions for the complete assignment.
 # 
 # Create a class for your decision tree classifier.
@@ -146,6 +150,19 @@ def calculate_entropy(labels):
 #    receives according to the value of an attribute. And that can call itself.
 #
 # Have the logic in place for at least the base cases of the recursive algorithm.
+# 
+# Implement a new algorithm, the ID3 Decision Tree.
+# 
+# After implementing the algorithm, use it to classify a dataset of your choice.
+# 
+# Compare your implementation of the ID3 algorithm to an existing one (e.g.,
+#    scikit-learn, Weka) and compare/contrast the results.
+# 
+# When complete, push your code to a public GitHub repository and answer the
+# questions in the submission text file. Please fill it out and upload it to
+# I-Learn.
+
+
 def main():
     classifier = decisionTreeClassifier()
 
@@ -161,12 +178,7 @@ def main():
 
     feature_names = ["deadline", "party", "lazy"]
 
-    wholeTable = concat([data, labels], axis=1)
-    wholeTable = wholeTable.rename(columns={'activity': 'labels'})
-    print calculate_information_gain(wholeTable, "deadline")
-
-    pass
-    # model = classifier.fit(data, labels, feature_names)
+    model = classifier.fit(data, labels, feature_names)
 
 
 if __name__ == "__main__":
