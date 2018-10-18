@@ -89,7 +89,8 @@ class decisionTreeClassifier(object):
         # Else if there are no features left to test:
         if len(S) == 1:
             # return a leaf with the most common label
-            return 'super-duper-dad!'
+            labels = S.labels
+            return max(set(labels), key=labels.count)
         
         # Else
         else:
