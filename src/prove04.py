@@ -5,15 +5,19 @@
 ###############################################################################
 from operator import itemgetter
 from numpy import log2
+from sklearn import tree
 from pandas import DataFrame, concat, read_csv
 from itertools import izip
-from copy import deepcopy
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import KFold
 import pydot
+
 
 class datasetFromCsv(object):
     """ This class represents a dataset; the data is read from a csv file """
     def __init__(self, sep):
         self.filedata = read_csv(self.filename, header = None, names = self.attribute_names, skipinitialspace=True, sep=sep)
+
 
 class UciCarEvaluation(datasetFromCsv):
     """ This class represents the UCI data """
@@ -23,12 +27,12 @@ class UciCarEvaluation(datasetFromCsv):
     @property
     def data(self):
         return DataFrame({
-            "buying": self.filedata["buying"].astype('category'),
-            "maint": self.filedata["maint"].astype('category'),
-            "doors": self.filedata["doors"].astype('category'),
-            "persons": self.filedata["persons"].astype('category'),
-            "lug_boot": self.filedata["lug_boot"].astype('category'),
-            "safety": self.filedata["safety"].astype('category')
+            "buying": self.filedata["buying"].astype('category').cat.codes,
+            "maint": self.filedata["maint"].astype('category').cat.codes,
+            "doors": self.filedata["doors"].astype('category').cat.codes,
+            "persons": self.filedata["persons"].astype('category').cat.codes,
+            "lug_boot": self.filedata["lug_boot"].astype('category').cat.codes,
+            "safety": self.filedata["safety"].astype('category').cat.codes
         })
 
     @property
@@ -51,7 +55,7 @@ class UciCarEvaluation(datasetFromCsv):
 
     @property
     def targets(self):
-        return DataFrame({'labels': self.filedata[self.attribute_names[-1]].astype('category')})
+        return DataFrame({'labels': self.filedata[self.attribute_names[-1]].astype('category').cat.codes})
 
 
 class decisionTreeClassifier(object):
@@ -109,29 +113,59 @@ class decisionTreeModel(object):
     def __init__(self, dTree):
         self.dTree = dTree
 
-    def predict(self, testing_data):
-        pass
+    def _predicting_visit(self, dTree, data_vector):
+        # Get the attribute that the decision will be based on
+        attribute = dTree.keys()[0]
+        attributeValue = getattr(data_vector, attribute)
+        subtree = dTree[attribute][attributeValue]
 
+        try:
+            if isinstance(subtree, dict):
+                subtree = self._predicting_visit(subtree, data_vector)
+        except KeyError:
+            # Unseen data, get the mode of the remaining labels in the subtree
+            remaining_labels = get_remaining_labels(subtree)
+            subtree = max(set(remaining_labels), key=remaining_labels.count)
+
+        return subtree
+
+    def predict(self, testing_data):
+        return [self._predicting_visit(self.dTree, data_vector) for data_vector in testing_data.itertuples()]
+            
     def _draw(self, graph, parent_name, child_name):
         edge = pydot.Edge(parent_name, child_name)
         graph.add_edge(edge)
 
-    def _visit(self, graph, node, parent=None):
+    def _drawing_visit(self, graph, node, parent=None):
+        nvl = lambda x, y: y if None == x else x  
+
         for k, v in node.iteritems():
             if isinstance(v, dict):
                 if parent:
-                    self._draw(graph, parent, k)
-                self._visit(graph, v, k)
+                    self._draw(graph, parent, nvl(parent, '') + '>' + k)
+                self._drawing_visit(graph, v, nvl(parent, '')+'>'+k)
             else:
-                self._draw(graph, parent, k)
-                self._draw(graph, k, k+'_'+v)
+                self._draw(graph, parent, nvl(parent, '') + '>' + k)
+                self._draw(graph, nvl(parent, '') + '>' + k, k+'_'+v)
 
     def drawTree(self):
-        """ Draw the tree - this method draws heavily from https://stackoverflow.com/questions/13688410/dictionary-object-to-decision-tree-in-pydot"""
+        """ Draw the tree - this method draws very heavily from https://stackoverflow.com/questions/13688410/dictionary-object-to-decision-tree-in-pydot"""
         graph = pydot.Dot(graph_type='graph')
-        self._visit(graph, self.dTree)
+        self._drawing_visit(graph, self.dTree)
         graph.write_png('myGraph.png')
 
+def get_remaining_labels(subtree):
+    labels = []
+
+    # Add them to the label list, and recurse
+    if isinstance(subtree, dict):
+        branches = subtree.keys()
+        for branch in branches: 
+            labels += get_remaining_labels(subtree[branch])
+    else:
+        labels += [subtree]
+    
+    return labels
 
 def calculate_information_gain(S, F):
     """ This function calculates the information gain of a particular feature """
@@ -225,6 +259,10 @@ def calculate_entropy(labels):
 
 
 def main():
+    #########################################################
+    # Test my decision tree classifier
+    #########################################################
+
     classifier = decisionTreeClassifier()
 
     uciCarEvaluationDataObject = UciCarEvaluation()
@@ -233,8 +271,57 @@ def main():
     label_names = uciCarEvaluationDataObject.target_names
 
     model = classifier.fit(data, labels)
-    model.drawTree()
-    # model.predict()
+    
+    accuracy_list = []
+    kf = KFold(n_splits=10)
+    for train_index, test_index in kf.split(data, labels):
+
+        # Build the data/target lists
+        training_data = data.iloc[train_index] 
+        training_labels = labels.iloc[train_index]
+        testing_data = data.iloc[test_index]
+        testing_labels = labels.iloc[test_index]
+
+        # Build the model
+        model = classifier.fit(training_data, training_labels)
+
+        # # Predict
+        predicted_classes = model.predict(testing_data)
+        
+        accuracy_list.append(accuracy_score(testing_labels, predicted_classes))
+    
+    print "The custom decision tree predicted the auto dataset's classes with an average of",
+    print sum(accuracy_list) / float(len(accuracy_list)) * 100,
+    print "percent accuracy." 
+
+    #########################################################
+    # Compare the SK-learn decision tree classifier
+    #########################################################
+
+    classifier = tree.DecisionTreeClassifier()
+
+    model = classifier.fit(data, labels)
+    
+    accuracy_list = []
+    kf = KFold(n_splits=10)
+    for train_index, test_index in kf.split(data, labels):
+
+        # Build the data/target lists
+        training_data = data.iloc[train_index] 
+        training_labels = labels.iloc[train_index]
+        testing_data = data.iloc[test_index]
+        testing_labels = labels.iloc[test_index]
+
+        # Build the model
+        model = classifier.fit(training_data, training_labels)
+
+        # # Predict
+        predicted_classes = model.predict(testing_data)
+        
+        accuracy_list.append(accuracy_score(testing_labels, predicted_classes))
+    print "The sk-learn decision tree predicted the auto dataset's classes with an average of",
+    print sum(accuracy_list) / float(len(accuracy_list)) * 100,
+    print "percent accuracy." 
 
 if __name__ == "__main__":
     main()
