@@ -102,9 +102,9 @@ class decisionTreeClassifier(object):
             # add a branch from the node for each possible value f in F^
             unique_values_in_F = S[F].unique()
     
-            # # for each branch:
-            #     # calculate S_f by removing F^ from the set of features            
-            #     # recursively call the algorithm with S_f, to compute the gain relative to the current set of examples
+            # for each branch:
+            # calculate S_f by removing F^ from the set of features            
+            # recursively call the algorithm with S_f, to compute the gain relative to the current set of examples
             dTree[F] = {f: self.recursiveTreeBuilder(S.query(F+' == @f').drop(F, axis=1)) for f in unique_values_in_F}
 
         return dTree
