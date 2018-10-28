@@ -25,18 +25,21 @@ inputVector = np.array
 
 #  You should appropriately normalize the data set.
 
-def addLayer(net, numberOfNodes):
-    randomFloat = lambda: random.uniform(-1,1)
-    if myNet == None:
-        pass
-    else:
-        pass
+###############################################################################
+# This is addLayer, it might come in handy I guess
+###############################################################################
+# def addLayer(net, numberOfNodes):
+#     randomFloat = lambda: random.uniform(-1,1)
+#     nodesInPreviousLayer = len(net[-1])
+#     newLayer =  np.array([[randomFloat() for i in range(numberOfNodes)] for j in range(nodesInPreviousLayer)])
+#     np.append(net, newLayer, axis=0)
+
 
 ###############################################################################
 # My neural net in practice
 ###############################################################################  
 
-myNet = None
-myInputVector = inputVector([.5,.5])
+myInputVector = inputVector([.5,.5,.5])
+myNet = neuralNet([[1,1,1,1,1],[2,2,2,2,2],[3,3,3,3,3]])
 
 addLayer(myNet, numberOfNodes=5)
