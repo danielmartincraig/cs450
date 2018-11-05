@@ -6,7 +6,9 @@
 
 import numpy as np
 import random
+import math
 from pandas import DataFrame, concat, read_csv
+from scipy.stats import zscore
 
 # Build a classifier with an arbitrary number of layers, and an arbitrary number of nodes in each layer.
 #     For example: 2 Layers (1 hidden, 1 output), with 4 nodes in the hidden layer, and 3 output nodes.
@@ -26,35 +28,31 @@ class datasetFromCsv(object):
         self.filedata = read_csv(self.filename, header = None, names = self.attribute_names, skipinitialspace=True, sep=sep)
 
 
-class ChessData(datasetFromCsv):
-    """ This class represents the Chess data """
+class IrisData(datasetFromCsv):
+    """ This class represents the Iris data """
     def __init__(self):
-        super(ChessData, self).__init__(sep=',')
+        super(IrisData, self).__init__(sep=',')
 
     @property
     def data(self):
         return DataFrame({
-            "WKingFile": self.filedata["WKingFile"].astype('category').cat.codes,
-            "WKingRank": self.filedata["WKingRank"].astype('category').cat.codes,
-            "WRookFile": self.filedata["WRookFile"].astype('category').cat.codes,
-            "WRookRank": self.filedata["WRookRank"].astype('category').cat.codes,
-            "BKingFile": self.filedata["BKingFile"].astype('category').cat.codes,
-            "BKingRank": self.filedata["BKingRank"].astype('category').cat.codes,
-        })
+            "sepalLength": self.filedata["sepalLength"],
+            "sepalWidth": self.filedata["sepalWidth"],
+            "petalLength": self.filedata["petalLength"],
+            "petalWidth": self.filedata["petalWidth"],
+        }).apply(zscore)
 
     @property
     def filename(self):
-        return "/home/daniel/Repos/cs450/resources/chess/archive.ics.uci.edu/ml/machine-learning-databases/chess/king-rook-vs-king/krkopt.data"
+        return "/home/daniel/Repos/cs450/resources/iris/archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data"
 
     @property
     def attribute_names(self):
-        return ["WKingFile",
-                "WKingRank",
-                "WRookFile",
-                "WRookRank",
-                "BKingFile",
-                "BKingRank",
-                "OptimalDepthOfWin"]
+        return ["sepalLength",
+                 "sepalWidth",
+                 "petalLength",
+                 "petalWidth",
+                 "class"]
 
     @property
     def target_names(self):
@@ -70,6 +68,7 @@ class ChessData(datasetFromCsv):
 class neuralNet(object):
     def __init__(self, numberOfInputNodes, numberOfNodesInFirstLayer):
         self.numberOfInputNodes = numberOfInputNodes
+        self.activationFunction = np.vectorize(lambda x: 1 / (1 + math.e ** -x))
         
         newLayer = np.array([[random.uniform(-1,1) for j in range(numberOfNodesInFirstLayer)] for i in range(numberOfInputNodes + 1)])
         self.layers = [newLayer]
@@ -86,9 +85,15 @@ class neuralNet(object):
 
     def classify(self, inputVector):
         for layer in self.layers:
+            # Add the bias node
             inputVector.append(-1)
-            inputVector = list(np.dot(inputVector, layer))
-        return inputVector
+
+            # Get the raw activations
+            inputVector = np.dot(inputVector, layer)
+
+            # apply the activation function to the vector
+            inputVector = list(self.activationFunction(inputVector))
+        return np.array(inputVector)
 
 ###############################################################################
 # getSingleLayerPerceptron 
@@ -105,16 +110,17 @@ class neuralNet(object):
 # My neural net in practice
 ###############################################################################
 def main():
-    ChessDataObject = ChessData()
-    vectors = [vector for vector in ChessDataObject.data.values.tolist()]
+    IrisDataObject = IrisData()
+    vectors = [vector for vector in IrisDataObject.data.values.tolist()]
 
-    myNet = neuralNet(numberOfInputNodes=6, numberOfNodesInFirstLayer=6)
+    myNet = neuralNet(numberOfInputNodes=4, numberOfNodesInFirstLayer=6)
     myNet.addLayer(numberOfNodes=2)
     myNet.addLayer(numberOfNodes=5)
 
-    labelActivations = lambda activation: np.where(activation>0,1,0)
-    for vector in vectors:
-        print labelActivations(myNet.classify(vector))
+    activations = [myNet.classify(vector) for vector in IrisDataObject.data.values.tolist()]
+    labelActivations = lambda activation: np.where(activation>0.5,1,0)
+    for row in activations:
+        print labelActivations(row)
 
 if __name__ == '__main__':
     main()
