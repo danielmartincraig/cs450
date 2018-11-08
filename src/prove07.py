@@ -19,7 +19,10 @@ from scipy.stats import zscore
 # Biases are present at every layer.
 # You should be able to complete the feed-forward portion of the algorithm, looping through each node of each layer to produce values at the output layer.
 # For your activation function, use the sigmoid function: f(x) = 1 / (1 + e^-x)
-# You should be able to classify an instance using your network. Please note that at this point, you will not have implemented any weight updates, so your network will essentially be randomly computing an answer, but it should be able to classify a given instance.
+# You should be able to classify an instance using your network. Please note
+# that at this point, you will not have implemented any weight updates, so your
+# network will essentially be randomly computing an answer, but it should be able
+# to classify a given instance.
 # Using the classification described, you should be able to classify a complete dataset and calculate the accuracy. (E.g., try it on the iris dataset)
 
 class datasetFromCsv(object):
@@ -83,41 +86,31 @@ class neuralNet(object):
     def numberOfLayers(self):
         return len(self.layers)
 
-    def classify(self, inputVector):
+    def classify(self, inputs):
+        # Iterate through the layers in the neural net
         for layer in self.layers:
             # Add the bias node
-            inputVector.append(-1)
-
-            # Get the raw activations
-            inputVector = np.dot(inputVector, layer)
-
+            inputs = DataFrame(inputs).assign(bias=-1)
+            # Get the activations
+            inputs = np.dot(inputs, layer)
             # apply the activation function to the vector
-            inputVector = list(self.activationFunction(inputVector))
-        return np.array(inputVector)
-
-###############################################################################
-# getSingleLayerPerceptron 
-###############################################################################  
-#def getSingleLayerPerceptron(numberOfInputs, numberOfNodes):
-#    neuralNet = np.array
-
-#    randomFloat = lambda: random.uniform(-1,1)
-#    perceptron = neuralNet([[randomFloat() for j in range(numberOfNodes)] for i in range(numberOfInputs + 1)])
-#    # perceptron = np.append(perceptron, [np.array([-1 for i in range(numberOfNodes)])], axis=0)
-#    return perceptron
+            inputs = self.activationFunction(inputs)
+        
+        return inputs
 
 ###############################################################################
 # My neural net in practice
 ###############################################################################
 def main():
     IrisDataObject = IrisData()
-    vectors = [vector for vector in IrisDataObject.data.values.tolist()]
+    data = IrisDataObject.data
+    targets = IrisDataObject.targets
 
     myNet = neuralNet(numberOfInputNodes=4, numberOfNodesInFirstLayer=6)
     myNet.addLayer(numberOfNodes=2)
     myNet.addLayer(numberOfNodes=5)
 
-    activations = [myNet.classify(vector) for vector in IrisDataObject.data.values.tolist()]
+    activations = myNet.classify(data)
     labelActivations = lambda activation: np.where(activation>0.5,1,0)
     for row in activations:
         print labelActivations(row)
