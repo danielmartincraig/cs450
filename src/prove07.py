@@ -10,27 +10,16 @@ import math
 from pandas import DataFrame, concat, read_csv
 from scipy.stats import zscore
 
-# Build a classifier with an arbitrary number of layers, and an arbitrary number of nodes in each layer.
-#     For example: 2 Layers (1 hidden, 1 output), with 4 nodes in the hidden layer, and 3 output nodes.
-#     Or 3 Layers (2 hidden, 1 output), with 2 nodes in the first, 3 in the second, 1 in the third.
-#     Or 2 Layers (1 hidden, 1 output) with 8 nodes in the hidden layer, and 2 in the output.
-#     Etc.
-# The number of weights for the first layer should be determined by the number of input attributes.
-# Biases are present at every layer.
-# You should be able to complete the feed-forward portion of the algorithm, looping through each node of each layer to produce values at the output layer.
-# For your activation function, use the sigmoid function: f(x) = 1 / (1 + e^-x)
-# You should be able to classify an instance using your network. Please note
-# that at this point, you will not have implemented any weight updates, so your
-# network will essentially be randomly computing an answer, but it should be able
-# to classify a given instance.
-# Using the classification described, you should be able to classify a complete dataset and calculate the accuracy. (E.g., try it on the iris dataset)
 
+
+###############################################################################  
 class datasetFromCsv(object):
     """ This class represents a dataset; the data is read from a csv file """
     def __init__(self, sep):
         self.filedata = read_csv(self.filename, header = None, names = self.attribute_names, skipinitialspace=True, sep=sep)
 
 
+###############################################################################  
 class IrisData(datasetFromCsv):
     """ This class represents the Iris data """
     def __init__(self):
@@ -65,22 +54,80 @@ class IrisData(datasetFromCsv):
     def targets(self):
         return DataFrame({'labels': self.filedata[self.attribute_names[-1]].astype('category').cat.codes})
 
+
+###############################################################################
+class NNClassifier(object):
+    """This class represents the neural net classifier"""
+    def __init__(self):
+        # Don't generate the neuralNet in the constructor, wait until fit() is called 
+        self.neuralNetwork = None
+
+    def fit(self, data, targets):
+        # Handle exceptional cases
+        if data.shape[0] == 0 or targets.shape[0] == 0:
+            raise Exception("The training data and targets passed to fit() cannot be null.")
+        if data.shape[0] != targets.shape[0]:
+            raise Exception("The number of training records did not match the number of training targets.")
+
+        # get the number of attributes - this equals the number of inputs to the first layer (not including bias)
+        numberOfInputNodes = data.shape[1]
+        # Specify how many nodes are in how many layers
+        numberOfNodesInLayers = [4,3,3]
+        
+        self.neuralNetwork = neuralNet(numberOfInputNodes=numberOfInputNodes, numbersOfNodesInLayers=numberOfNodesInLayers)
+
+
+
+        # Feed the inputs forward
+        # Compute the error at the output nodes
+        # Feed the error backwards through the neural net
+
+
+        # for layer in self.layers:
+            
+        #     # Add the bias node and calculate the activations
+        #     inputs = DataFrame(inputs).assign(bias=-1)
+        #     inputs = np.dot(inputs, layer)
+            
+        #     # "the inputs and the first-layer weights (here labelled as v) are used to decide
+        #     # whether the hidden nodes fire or not. The activation function g(x) is the sigmoid
+        #     # function given in Equation (4.2) above"
+        #     inputs = self.activationFunction(inputs)
+
+
+        #     # "the outputs of these neurons and the second-layer weights (labelled as w) are
+        #     # used to decide if the output neurons fire or not"
+
+        #         # apply the activation function to the vector
+            
+        #     return inputs
+
+
+
+    def predict(self, testing_data):
+        return ["No Results!"]
+
 ###############################################################################
 # This class defines my neural network
 ###############################################################################  
 class neuralNet(object):
-    def __init__(self, numberOfInputNodes, numberOfNodesInFirstLayer):
-        self.numberOfInputNodes = numberOfInputNodes
-        self.activationFunction = np.vectorize(lambda x: 1 / (1 + math.e ** -x))
+    def __init__(self, numberOfInputNodes, numbersOfNodesInLayers):
+        if numberOfInputNodes <= 0:
+            raise Exception("Neural network must have positive number of input nodes")
+        if len(numbersOfNodesInLayers) == 0:
+            raise Exception("Cannot create the neural net without knowledge of how many nodes to put in each of how many layers")
         
-        newLayer = np.array([[random.uniform(-1,1) for j in range(numberOfNodesInFirstLayer)] for i in range(numberOfInputNodes + 1)])
-        self.layers = [newLayer]
+        self.numberOfInputNodes = numberOfInputNodes
+        # self.activationFunction = np.vectorize(lambda x: 1 / (1 + math.e ** -x))
 
-    def addLayer(self, numberOfNodes):
-        numberOfInputNodesToNewLayer = len(self.layers[-1][0])
-        newLayer = np.array([[random.uniform(-1,1) for j in range(numberOfNodes)] for i in range(numberOfInputNodesToNewLayer + 1)])
+        numberOfNodesInFirstLayer = numbersOfNodesInLayers[0]
+        firstLayer = np.array([[random.uniform(-1,1) for j in range(numberOfNodesInFirstLayer)] for i in range(numberOfInputNodes + 1)])
+        self.layers = [firstLayer]
 
-        self.layers.append(newLayer)
+        for numberOfNodes in numbersOfNodesInLayers[1:]:
+            numberOfInputNodesToNewLayer = len(self.layers[-1][0])
+            newLayer = np.array([[random.uniform(-1,1) for j in range(numberOfNodes)] for i in range(numberOfInputNodesToNewLayer + 1)])
+            self.layers.append(newLayer)
 
     @property
     def numberOfLayers(self):
@@ -102,18 +149,17 @@ class neuralNet(object):
 # My neural net in practice
 ###############################################################################
 def main():
+    # Get the data
     IrisDataObject = IrisData()
     data = IrisDataObject.data
     targets = IrisDataObject.targets
 
-    myNet = neuralNet(numberOfInputNodes=4, numberOfNodesInFirstLayer=6)
-    myNet.addLayer(numberOfNodes=2)
-    myNet.addLayer(numberOfNodes=5)
+    # Declare the classifier
+    classifier = NNClassifier()
+    model = classifier.fit(data, targets)
 
-    activations = myNet.classify(data)
-    labelActivations = lambda activation: np.where(activation>0.5,1,0)
-    for row in activations:
-        print labelActivations(row)
+    # predicted_targets = model.predict(testing_data)
+
 
 if __name__ == '__main__':
     main()
