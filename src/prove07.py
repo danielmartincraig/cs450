@@ -5,8 +5,7 @@
 ###############################################################################
 
 import numpy as np
-import random
-import math
+import random, math
 from pandas import DataFrame, concat, read_csv
 from scipy.stats import zscore
 from sklearn.metrics import accuracy_score
@@ -66,45 +65,65 @@ class NNClassifier(object):
         self.activationFunction = np.vectorize(lambda x: 1 / (1 + math.e ** -x))
         self.learning_rate = .3
 
-    def fit(self, data, targets):
+    def fit(self, training_data, targets):
         # Handle exceptional cases
-        if data.shape[0] == 0 or targets.shape[0] == 0:
+        if training_data.shape[0] == 0 or targets.shape[0] == 0:
             raise Exception("The training data and targets passed to fit() cannot be null.")
-        if data.shape[0] != targets.shape[0]:
+        if training_data.shape[0] != targets.shape[0]:
             raise Exception("The number of training records did not match the number of training targets.")
 
         # get the number of attributes - this equals the number of inputs to the first layer (not including bias)
-        numberOfInputNodes = data.shape[1]
+        numberOfInputNodes = training_data.shape[1]
         # Specify how many nodes are in how many layers
         numberOfNodesInLayers = [4,3,3]
         
         self.neuralNetwork = neuralNet(numberOfInputNodes=numberOfInputNodes, numbersOfNodesInLayers=numberOfNodesInLayers)
 
-        # Feed the inputs forward
-        for layer in self.neuralNetwork.layers:
-            # Add the bias node
-            data = DataFrame(data).assign(bias=-1)
-            # Get the activations
-            data = np.dot(data, layer)
-            # apply the activation function to the vector
-            data = self.activationFunction(data)
+        # Find the activations of the first layer
+        # Start by adding the bias to the training data
+        training_data = DataFrame(training_data).assign(bias=-1)
+        # Then calculate the output
+        output = np.dot(training_data, self.neuralNetwork.layers[0])
+        # Apply the activation function to the output
+        activations = self.activationFunction(output) 
+        # Then store the activations as a list in the neural network
+        self.neuralNetwork.activations = [activations]
 
-        activations = data
+        # Find the activations of the additional layers
+        for layer in self.neuralNetwork.layers[1:]:
+            # Get the input to the current layer from the previous layer
+            inputToLayer = self.neuralNetwork.activations[-1]
+            # Create the bias column and add it to the input
+            biasColumn = np.full(shape=(self.neuralNetwork.activations[-1].shape[0],1), fill_value=-1)
+            inputToLayer = np.append(inputToLayer, biasColumn, 1) # Make sure that this doesn't change the activations in the neural net itself
+            # Calculate the output
+            output = np.dot(inputToLayer, layer)
+            # Apply the activation function
+            activations = self.activationFunction(output)
+            self.neuralNetwork.activations.append(activations)
 
-        # Feed the error backwards through the neural net and update the weights
-        # Start by calculating the error at the output nodes
+        # Calculate the error at the output nodes and add it to the list of errors.
+        # Note that the list of errors is built backwards
         # delta_output(k) = (a_k - t_k) * a_k * (1 - a_k)
-        errorAtOutputNodes = activations*(1 - activations)*(activations - targets)
+        errorAtOutputNodes = activations * (1 - activations) * (activations - targets)
+        self.neuralNetwork.errors = [errorAtOutputNodes]
 
-        # layer2 = self.neuralNetwork.layers[-1]
-        # errorAtOutputNodes.T
+        # Calculate the error at the last hidden layer 
+        layer = self.neuralNetwork.layers[-1]
+        activations = self.neuralNetwork.activations[-2] 
+        biasColumn = np.full(shape=(activations.shape[0],1), fill_value=-1)
+        augmentedActivations = np.append(activations, biasColumn, axis=1)
 
-        # np.dot(layer2, errorAtOutputNodes.T)
+        errors = augmentedActivations.T * (1 - augmentedActivations.T) * np.dot(layer, errorAtOutputNodes.T)
+        self.neuralNetwork.errors.append(errors)
 
-        # Calculate the error at every layer of hidden nodes
+        print "Caterpilar!"
+
+        # Calculate the error in the weights of every other layer of hidden nodes
         # delta_hidden(j) = a_j * (1 - a_j) \sum_{k=1}^{N} (w_j * delta_output(k))
-        # for layer in self.neuralNetwork.layers[::-1]:
+        # for layer, activations in zip(self.neuralNetwork.layers[::-1], self.neuralNetwork.activations[-2::-1]):
         #     pass
+
 
         return NNModel(self.neuralNetwork)
 
@@ -144,7 +163,8 @@ class neuralNet(object):
             self.layers.append(newLayer)
 
         # Create a place to store the activations of the nodes in the net
-        self.activations = [None for numberOfNodes in numbersOfNodesInLayers]
+        self.activations = None
+        self.errors = None
 
     @property
     def numberOfLayers(self):
