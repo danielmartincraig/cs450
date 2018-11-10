@@ -11,6 +11,7 @@ from scipy.stats import zscore
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import LabelBinarizer
+from collections import deque
 
 
 ###############################################################################  
@@ -103,26 +104,18 @@ class NNClassifier(object):
             self.neuralNetwork.activations.append(activations)
 
         # Calculate the error at the output nodes and add it to the list of errors.
-        # Note that the list of errors is built backwards
         # delta_output(k) = (a_k - t_k) * a_k * (1 - a_k)
         errorAtOutputNodes = activations * (1 - activations) * (activations - targets)
-        self.neuralNetwork.errors = [errorAtOutputNodes]
+        self.neuralNetwork.errors = deque([errorAtOutputNodes])
 
-        # Calculate the error at the last hidden layer 
-        layer = self.neuralNetwork.layers[-1]
-        activations = self.neuralNetwork.activations[-2] 
-        biasColumn = np.full(shape=(activations.shape[0],1), fill_value=-1)
-        augmentedActivations = np.append(activations, biasColumn, axis=1)
+        for layer, activations in zip(self.neuralNetwork.layers[::-1], self.neuralNetwork.activations[-2::-1]):
+            biasColumn = np.full(shape=(activations.shape[0],1), fill_value=-1)
+            augmentedActivations = np.append(activations, biasColumn, axis=1)
 
-        errors = augmentedActivations.T * (1 - augmentedActivations.T) * np.dot(layer, errorAtOutputNodes.T)
-        self.neuralNetwork.errors.append(errors)
+            errors = augmentedActivations.T * (1 - augmentedActivations.T) * np.dot(layer, self.neuralNetwork.errors[-1].T)
+            self.neuralNetwork.errors.appendleft(errors.T)
 
         print "Caterpilar!"
-
-        # Calculate the error in the weights of every other layer of hidden nodes
-        # delta_hidden(j) = a_j * (1 - a_j) \sum_{k=1}^{N} (w_j * delta_output(k))
-        # for layer, activations in zip(self.neuralNetwork.layers[::-1], self.neuralNetwork.activations[-2::-1]):
-        #     pass
 
 
         return NNModel(self.neuralNetwork)
