@@ -1,6 +1,6 @@
 ###############################################################################
-#                           Neural Net Milestone 1
-#
+#                            Neural Net Classifier
+#                                   CS450
 #                                Daniel Craig
 ###############################################################################
 
@@ -9,19 +9,21 @@ import random
 import math
 from pandas import DataFrame, concat, read_csv
 from scipy.stats import zscore
-
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import KFold
+from sklearn.preprocessing import LabelBinarizer
 
 
 ###############################################################################  
 class datasetFromCsv(object):
-    """ This class represents a dataset; the data is read from a csv file """
+    """ Represents a dataset; the data is read from a csv file """
     def __init__(self, sep):
         self.filedata = read_csv(self.filename, header = None, names = self.attribute_names, skipinitialspace=True, sep=sep)
 
 
 ###############################################################################  
 class IrisData(datasetFromCsv):
-    """ This class represents the Iris data """
+    """ Represents the Iris data """
     def __init__(self):
         super(IrisData, self).__init__(sep=',')
 
@@ -57,10 +59,12 @@ class IrisData(datasetFromCsv):
 
 ###############################################################################
 class NNClassifier(object):
-    """This class represents the neural net classifier"""
-    def __init__(self):
+    """ Represents the neural net classifier """
+    def __init__(self, learning_rate):
         # Don't generate the neuralNet in the constructor, wait until fit() is called 
         self.neuralNetwork = None
+        self.activationFunction = np.vectorize(lambda x: 1 / (1 + math.e ** -x))
+        self.learning_rate = .3
 
     def fit(self, data, targets):
         # Handle exceptional cases
@@ -76,74 +80,88 @@ class NNClassifier(object):
         
         self.neuralNetwork = neuralNet(numberOfInputNodes=numberOfInputNodes, numbersOfNodesInLayers=numberOfNodesInLayers)
 
-
-
         # Feed the inputs forward
-        # Compute the error at the output nodes
-        # Feed the error backwards through the neural net
+        for layer in self.neuralNetwork.layers:
+            # Add the bias node
+            data = DataFrame(data).assign(bias=-1)
+            # Get the activations
+            data = np.dot(data, layer)
+            # apply the activation function to the vector
+            data = self.activationFunction(data)
+
+        activations = data
+
+        # Feed the error backwards through the neural net and update the weights
+        # Start by calculating the error at the output nodes
+        # delta_output(k) = (a_k - t_k) * a_k * (1 - a_k)
+        errorAtOutputNodes = activations*(1 - activations)*(activations - targets)
+
+        # layer2 = self.neuralNetwork.layers[-1]
+        # errorAtOutputNodes.T
+
+        # np.dot(layer2, errorAtOutputNodes.T)
+
+        # Calculate the error at every layer of hidden nodes
+        # delta_hidden(j) = a_j * (1 - a_j) \sum_{k=1}^{N} (w_j * delta_output(k))
+        # for layer in self.neuralNetwork.layers[::-1]:
+        #     pass
+
+        return NNModel(self.neuralNetwork)
 
 
-        # for layer in self.layers:
-            
-        #     # Add the bias node and calculate the activations
-        #     inputs = DataFrame(inputs).assign(bias=-1)
-        #     inputs = np.dot(inputs, layer)
-            
-        #     # "the inputs and the first-layer weights (here labelled as v) are used to decide
-        #     # whether the hidden nodes fire or not. The activation function g(x) is the sigmoid
-        #     # function given in Equation (4.2) above"
-        #     inputs = self.activationFunction(inputs)
-
-
-        #     # "the outputs of these neurons and the second-layer weights (labelled as w) are
-        #     # used to decide if the output neurons fire or not"
-
-        #         # apply the activation function to the vector
-            
-        #     return inputs
-
-
+###############################################################################  
+class NNModel(object):
+    """ Represents a trained NN model, used for classification"""
+    def __init__(self, neuralNetwork):
+        self.neuralNetwork = neuralNetwork
 
     def predict(self, testing_data):
         return ["No Results!"]
 
-###############################################################################
-# This class defines my neural network
+
 ###############################################################################  
 class neuralNet(object):
+    """ Represents a neural network """
     def __init__(self, numberOfInputNodes, numbersOfNodesInLayers):
+        # Handle exceptional cases
         if numberOfInputNodes <= 0:
             raise Exception("Neural network must have positive number of input nodes")
         if len(numbersOfNodesInLayers) == 0:
             raise Exception("Cannot create the neural net without knowledge of how many nodes to put in each of how many layers")
         
+        # Store the number of input nodes
         self.numberOfInputNodes = numberOfInputNodes
-        # self.activationFunction = np.vectorize(lambda x: 1 / (1 + math.e ** -x))
-
+    
+        # Create the first layer randomly.  It will be a matrix of size (numberOfInputNodes X numberOfNodesInFirstLayer)
         numberOfNodesInFirstLayer = numbersOfNodesInLayers[0]
         firstLayer = np.array([[random.uniform(-1,1) for j in range(numberOfNodesInFirstLayer)] for i in range(numberOfInputNodes + 1)])
         self.layers = [firstLayer]
 
+        # Create the other layers, if the they are supposed to exist
         for numberOfNodes in numbersOfNodesInLayers[1:]:
             numberOfInputNodesToNewLayer = len(self.layers[-1][0])
             newLayer = np.array([[random.uniform(-1,1) for j in range(numberOfNodes)] for i in range(numberOfInputNodesToNewLayer + 1)])
             self.layers.append(newLayer)
 
+        # Create a place to store the activations of the nodes in the net
+        self.activations = [None for numberOfNodes in numbersOfNodesInLayers]
+
     @property
     def numberOfLayers(self):
+        """ Returns the number of layers in the neural network """
         return len(self.layers)
 
-    def classify(self, inputs):
-        # Iterate through the layers in the neural net
-        for layer in self.layers:
-            # Add the bias node
-            inputs = DataFrame(inputs).assign(bias=-1)
-            # Get the activations
-            inputs = np.dot(inputs, layer)
-            # apply the activation function to the vector
-            inputs = self.activationFunction(inputs)
+    # def classify(self, inputs):
+    #     # Iterate through the layers in the neural net
+    #     for layer in self.layers:
+    #         # Add the bias node
+    #         inputs = DataFrame(inputs).assign(bias=-1)
+    #         # Get the activations
+    #         inputs = np.dot(inputs, layer)
+    #         # apply the activation function to the vector
+    #         inputs = self.activationFunction(inputs)
         
-        return inputs
+    #     return inputs
 
 ###############################################################################
 # My neural net in practice
@@ -153,12 +171,34 @@ def main():
     IrisDataObject = IrisData()
     data = IrisDataObject.data
     targets = IrisDataObject.targets
+    label_binarizer = LabelBinarizer()
+    label_binarizer.fit(targets['labels'].unique())
+    onehot_targets = label_binarizer.transform(targets)
 
     # Declare the classifier
-    classifier = NNClassifier()
-    model = classifier.fit(data, targets)
+    classifier = NNClassifier(learning_rate = .2)
 
-    # predicted_targets = model.predict(testing_data)
+    # Declare a list to hold the accuracy scores
+    accuracy_list = []
+    
+    # Create the KFold split object 
+    kf = KFold(n_splits=2)
+    for train_index, test_index in kf.split(data, onehot_targets):
+
+        # Build the data/target lists
+        training_data = data.iloc[train_index] 
+        training_targets = onehot_targets[train_index]
+        testing_data = data.iloc[test_index]
+        testing_targets = onehot_targets[test_index]
+
+        # Build the model
+        model = classifier.fit(training_data, training_targets)
+
+        # Predict
+        predicted_classes = model.predict(testing_data)
+        
+        # Add the results to the list of accuracy scores
+        # accuracy_list.append(accuracy_score(testing_targets, predicted_classes))
 
 
 if __name__ == '__main__':
