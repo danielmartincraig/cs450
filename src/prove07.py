@@ -12,6 +12,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import LabelBinarizer
 from collections import deque
+from itertools import islice
 
 
 ###############################################################################  
@@ -64,7 +65,7 @@ class NNClassifier(object):
         # Don't generate the neuralNet in the constructor, wait until fit() is called 
         self.neuralNetwork = None
         self.activationFunction = np.vectorize(lambda x: 1 / (1 + math.e ** -x))
-        self.learning_rate = .3
+        self.learning_rate = learning_rate
 
     def fit(self, training_data, targets):
         # Handle exceptional cases
@@ -76,7 +77,7 @@ class NNClassifier(object):
         # get the number of attributes - this equals the number of inputs to the first layer (not including bias)
         numberOfInputNodes = training_data.shape[1]
         # Specify how many nodes are in how many layers
-        numberOfNodesInLayers = [4,3,3]
+        numberOfNodesInLayers = [4,5,3]
         
         self.neuralNetwork = neuralNet(numberOfInputNodes=numberOfInputNodes, numbersOfNodesInLayers=numberOfNodesInLayers)
 
@@ -108,15 +109,26 @@ class NNClassifier(object):
         errorAtOutputNodes = activations * (1 - activations) * (activations - targets)
         self.neuralNetwork.errors = deque([errorAtOutputNodes])
 
+        # Calculate the error at each of the hidden layers and prepend it to the list of errors
         for layer, activations in zip(self.neuralNetwork.layers[::-1], self.neuralNetwork.activations[-2::-1]):
             biasColumn = np.full(shape=(activations.shape[0],1), fill_value=-1)
             augmentedActivations = np.append(activations, biasColumn, axis=1)
 
-            errors = augmentedActivations.T * (1 - augmentedActivations.T) * np.dot(layer, self.neuralNetwork.errors[-1].T)
+            errors = augmentedActivations * (1 - augmentedActivations) * np.dot(layer, self.neuralNetwork.errors[-1].T)
             self.neuralNetwork.errors.appendleft(errors.T)
 
-        print "Caterpilar!"
+        # Update the weights 
+        for errors, activations, layer in zip(self.neuralNetwork.activations[-2::-1], islice(reversed(self.neuralNetwork.errors), None, None), self.neuralNetwork.layers[::-1]):
+            biasColumn = np.full(shape=(activations.shape[0],1), fill_value=-1)
+            augmentedActivations = np.append(activations, biasColumn, axis=1)
 
+            meanColumnErrors = np.mean(errors, axis=0)
+            meanColumnActivations = np.mean(augmentedActivations, axis=0)
+            delta = np.array([meanColumnErrors * activation for activation in meanColumnActivations])
+            learningRateTimesDelta = self.learning_rate * delta
+            
+            layer -= learningRateTimesDelta
+            print "Grasshopper!"
 
         return NNModel(self.neuralNetwork)
 
