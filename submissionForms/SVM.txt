@@ -1,0 +1,33 @@
+When your assignment is complete, please answer the questions in this text file and upload it to I-Learn.
+
+
+1. Please describe your experiment/results for the Vowel dataset. How many different parameters did you try? What was the highest accuracy you obtained, and what were the parameters that produced it?
+  For the vowel dataset, I randomly sampled the data of 48 speakers pronouncing
+  each of the 11 syllables, and then predicted the syllable that was being
+  pronounced. The SVM did very well, with the best accuracy that I saw being
+  97.15 percent accuracy, with gamma = .01 and C = 1*10^7.
+
+2. Please describe your experiment/results for the Letters dataset. How many different parameters did you try? What was the highest accuracy you obtained, and what were the parameters that produced it?
+ The letters dataset was more straightforward, because I just grabbed 2/3 of the
+ records for training data and left 1/3 for testing. The best accuracy that I
+ saw there was 84 percent, which was achieved with gamma = .1 and C = 100.
+
+3. Describe anything you did to go above and beyond the minimum standard requirements.
+
+ I went above and beyond by learning to use the ggplot2 library, learning to
+ wrangle my data as I read the R for Data Science text book, and as I struggled
+ to model the original parameters of the syllables problem, as stated on the UCI
+ website.
+
+4. Please select the category you feel best describes your assignment:
+A - Some attempt was made
+B - Developing, but significantly deficient
+C - Slightly deficient, but still mostly adequate
+D - Meets requirements
+E - Shows creativity and excels above and beyond requirements
+
+-E-
+
+5. Provide a brief justification (1-2 sentences) for selecting that category.
+ My submission is original, was designed thoughtfully, and represents a lot of
+ learning that I did.
